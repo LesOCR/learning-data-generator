@@ -14,38 +14,19 @@ import (
 	"code.google.com/p/go.image/bmp"
 )
 
-var (
-	fonts map[string]*truetype.Font
-)
-
 func main() {
 	// Font loading
-	verdana, err := readFont("verdana.ttf")
-	if err != nil {
-		panic(err)
-	}
-	arial, err := readFont("arial.ttf")
-	if err != nil {
-		panic(err)
-	}
-	trebuchet, err := readFont("trebuchet.ttf")
-	if err != nil {
-		panic(err)
-	}
-	merriweather, err := readFont("merriweather-sans.ttf")
-	if err != nil {
-		panic(err)
-	}
-	microsoft, err := readFont("microsoft-sans.ttf")
-	if err != nil {
-		panic(err)
-	}
-	fonts = map[string]*truetype.Font{
-		"verdana":      verdana,
-		"arial":        arial,
-		"trebuchet":    trebuchet,
-		"merriweather": merriweather,
-		"microsoft":    microsoft,
+	fonts := []*truetype.Font{
+		// Sans-serif
+		readFont("arial.ttf"),
+		readFont("verdana.ttf"),
+		readFont("trebuchet.ttf"),
+		readFont("microsoft-sans.ttf"),
+		readFont("merriweather-sans.ttf"),
+
+		// Serif
+		readFont("times-new-roman.ttf"),
+		readFont("georgia.ttf"),
 	}
 
 	reg := regexp.MustCompile("[A-Za-z0-9]")
@@ -54,25 +35,20 @@ func main() {
 		if !reg.Match([]byte{i}) {
 			continue
 		}
-		j := 0
-		for fontName := range fonts {
-			img, err := MakeImage(string(i), fontName)
+		for j, font := range fonts {
+			img, err := MakeImage(string(i), font)
 			if err != nil {
 				panic(err)
 			}
-			os.Mkdir("./out/"+fmt.Sprintf("%d", i), 02664)
-			saveToBmpFile("out/"+fmt.Sprintf("%d", i)+"/"+fmt.Sprintf("%d", j)+".bmp", img)
-			j++
+			os.Mkdir(fmt.Sprintf("./out/%d", i), 0777)
+			saveToBmpFile(fmt.Sprintf("out/%d/%d.bmp", i, j), img)
 		}
 	}
 }
 
 // MakeImage generates an image with the specified text at the specified size
 // (in bold type or not)
-func MakeImage(text, fontName string) (*image.RGBA, error) {
-	// Font weight
-	font := fonts[fontName]
-
+func MakeImage(text string, font *truetype.Font) (*image.RGBA, error) {
 	img := image.NewRGBA(image.Rect(0, 0, 35, 35))
 	draw.Draw(img, img.Bounds(), &image.Uniform{color.White}, image.ZP, draw.Src)
 	c := freetype.NewContext()
@@ -107,16 +83,16 @@ func saveToBmpFile(filePath string, i *image.RGBA) {
 }
 
 // readFont opens a font file and makes freetype decode it
-func readFont(file string) (*truetype.Font, error) {
+func readFont(file string) *truetype.Font {
 	fontBytes, err := ioutil.ReadFile(file)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 	font, err := freetype.ParseFont(fontBytes)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
-	return font, nil
+	return font
 }
 
 // textWidth measures very accurately the width a text uses on an image
