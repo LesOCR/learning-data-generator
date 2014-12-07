@@ -29,7 +29,7 @@ func main() {
 		readFont("georgia.ttf"),
 	}
 
-	reg := regexp.MustCompile("[A-Za-z0-9]")
+	reg := regexp.MustCompile("[A-Za-z0-9,.?!\\-_]")
 
 	for i := byte(0); i < 255; i++ {
 		if !reg.Match([]byte{i}) {
